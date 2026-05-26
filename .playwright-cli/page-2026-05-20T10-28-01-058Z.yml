@@ -1,0 +1,13 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - heading "🐟 海底赛跑 · 课堂抽人" [level=1]
+    - paragraph: 小鱼们出发啦！谁会第一个到达终点呢？
+  - generic [ref=e4]:
+    - button "🌊 开始赛跑" [ref=e5] [cursor=pointer]
+    - button "🔄 重新开始" [disabled] [ref=e6]
+  - generic:
+    - generic:
+      - generic: 🏆
+      - generic: 恭喜获胜的小鱼是
+      - generic: —
+      - button "🎉 知道了"

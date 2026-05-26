@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sanctuary</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap">
+  <style>
+    .brand, .tab-button { font-family: "ZCOOL KuaiLe", system-ui, sans-serif; }
+  </style>
+</head>
+<body>
+  <main class="game-shell" aria-label="Sanctuary">
+    <header class="top-nav">
+      <div class="brand">Sanctuary</div>
+
+      <nav class="tabs" aria-label="模式切换">
+        <button class="tab-button active" type="button">孩子模式</button>
+        <button class="tab-button" type="button" onclick="location.href='parent.html'">家长模式</button>
+      </nav>
+
+      <div class="nav-actions" aria-label="页面工具">
+        <button class="icon-button" type="button" aria-label="全屏">⛶</button>
+        <button class="icon-button" type="button" aria-label="设置">⚙</button>
+      </div>
+    </header>
+
+    <div class="content-layout">
+      <aside class="side-panel" aria-label="玩家菜单">
+        <section class="profile-card">
+          <div class="avatar" aria-hidden="true"></div>
+          <div>
+            <h1>玩家1</h1>
+            <p id="playerLevelLabel">5级探索者</p>
+          </div>
+        </section>
+
+        <!-- 小猫进化展示 -->
+        <section class="cat-evolution-card" aria-label="我的小猫">
+          <div class="cat-evo-frame" id="catEvoFrame">
+            <img id="catEvoImg" src="assets/cat/stages/1-egg.png" alt="小猫">
+          </div>
+          <div class="cat-evo-name" id="catEvoName">猫猫蛋</div>
+        </section>
+
+        <!-- 进化阶段路径 -->
+        <section class="cat-stages-track" aria-label="进化路径" id="catStagesTrack"></section>
+
+        <!-- 经验值 -->
+        <section class="energy-card" aria-label="小猫经验值">
+          <div class="energy-header">
+            <span>小猫经验</span>
+            <strong id="xpLabel">0 / 10</strong>
+          </div>
+          <div class="energy-track" aria-hidden="true">
+            <span id="xpBar" style="width: 0%"></span>
+          </div>
+        </section>
+
+        <!-- 能量 + 互动按钮 -->
+        <section class="cat-care-card" aria-label="互动">
+          <div class="energy-header">
+            <span>能量</span>
+            <strong id="energyLabel">0</strong>
+          </div>
+          <div class="cat-care-row">
+            <button class="cat-care-btn" id="feedBtn" type="button" data-cost="5" data-xp="3" aria-label="喂食">
+              <span class="cat-care-icon" data-care-icon="bowl"></span>
+              <span class="cat-care-label">喂食</span>
+              <span class="cat-care-cost">-5</span>
+            </button>
+            <button class="cat-care-btn" id="playBtn" type="button" data-cost="8" data-xp="5" aria-label="玩耍">
+              <span class="cat-care-icon" data-care-icon="ball"></span>
+              <span class="cat-care-label">玩耍</span>
+              <span class="cat-care-cost">-8</span>
+            </button>
+          </div>
+          <button class="reset-level-btn" id="resetLevelBtn" type="button">重置等级</button>
+        </section>
+      </aside>
+
+      <section class="map-stage" aria-label="房间地图">
+        <div class="scene-frame" id="sceneFrame">
+          <img class="map-image" src="assets/rooms/home.png" alt="小十二的家房间地图">
+          <img class="map-player" id="mapPlayer" src="assets/ui/player.png" alt="" aria-hidden="true">
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="home.js"></script>
+</body>
+</html>

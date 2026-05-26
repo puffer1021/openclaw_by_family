@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>学习房间 · Sanctuary</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="learning.css">
+</head>
+<body class="learning-page">
+  <main class="game-shell" aria-label="学习房间">
+    <header class="top-nav">
+      <div class="brand">Sanctuary</div>
+      <nav class="tabs" aria-label="端口切换">
+        <button class="tab-button active" type="button">孩子模式</button>
+        <button class="tab-button" type="button" onclick="location.href='parent.html'">家长模式</button>
+      </nav>
+      <div class="nav-actions">
+        <button class="icon-button" type="button" aria-label="全屏">⛶</button>
+        <button class="icon-button" type="button" aria-label="返回主页"
+          onclick="history.length>1?history.back():location.href='index.html'">✕</button>
+      </div>
+    </header>
+
+    <!-- 全屏地图 -->
+    <section class="learning-map-stage" aria-label="学习岛屿地图">
+      <img class="learning-map-bg" src="assets/rooms/learning-map.png" alt="学习岛屿地图">
+
+      <!-- 岛屿热区 -->
+      <a class="island-hotspot island-chinese locked" href="#" aria-label="语文岛 · 未解锁"
+         onclick="event.preventDefault(); flashLocked(this);"></a>
+      <a class="island-hotspot island-math" href="math.html" aria-label="数学岛"></a>
+      <a class="island-hotspot island-english locked" href="#" aria-label="英语岛 · 未解锁"
+         onclick="event.preventDefault(); flashLocked(this);"></a>
+      <a class="island-hotspot island-coding locked" href="#" aria-label="编程岛 · 未解锁"
+         onclick="event.preventDefault(); flashLocked(this);"></a>
+
+      <!-- 当前进化阶段的猫，覆盖图里猫咪咖啡杯位置 -->
+      <img class="map-cat" id="floatingCatImg" src="assets/cat/stages/1-egg.png" alt="我的小猫">
+    </section>
+  </main>
+
+  <script src="learning.js" type="module"></script>
+</body>
+</html>

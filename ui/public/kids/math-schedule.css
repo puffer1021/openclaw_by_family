@@ -1,0 +1,660 @@
+/* =================================================
+   数学岛 · 合理安排时间（甘特图拖拽题）
+   ================================================= */
+.math-page {
+  display: block;
+  height: 100vh;
+  overflow: hidden;
+  background:
+    url('assets/rooms/desk-schedule.png') center/contain no-repeat,
+    #1a1208;
+  image-rendering: pixelated;
+  /* 友好的中文 UI 字体，盖掉 styles.css 的 Courier New */
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Heiti SC", -apple-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: 0.02em;
+}
+.math-page,
+.math-page button,
+.math-page input,
+.math-page h1,
+.math-page h2,
+.math-page h3 {
+  font-family: inherit;
+}
+
+.math-page .top-nav {
+  background: rgba(20, 14, 10, 0.78);
+  backdrop-filter: blur(6px);
+  border-bottom: 2px solid rgba(255, 216, 59, 0.25);
+}
+
+.math-page .game-shell {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+/* 整体上移：木牌下面立刻接故事梗概，左右收紧避开桌面装饰物 */
+.math-layout {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 1vh;
+  padding: 17vh 15vw 1.5vh;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+}
+
+/* ===== 故事梗概行：紧跟在背景木牌下方 ===== */
+.puzzle-card {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+/* "故事梗概：xxxxx" 一整段文字，行内排版 — 棕色字体 */
+.puzzle-summary {
+  margin: 0;
+  padding: 0;
+  font-size: clamp(16px, 1.55vw, 22px);
+  line-height: 1.7;
+  color: #6F4B37;
+  text-shadow: 0 1px 0 rgba(225, 207, 187, 0.4);
+}
+.summary-label {
+  color: #6F4B37;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  margin-right: 6px;
+}
+.puzzle-text {
+  color: #865738;
+  font-weight: 600;
+}
+
+.puzzle-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.puzzle-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 11px;
+  background: linear-gradient(180deg, #ffba4d, #e88c1f);
+  color: #2d1a08;
+  border: 2px solid #050708;
+  border-radius: 5px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 2px 2px 0 rgba(0, 0, 0, 0.4);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.puzzle-title {
+  margin: 0;
+  font-size: clamp(15px, 1.3vw, 18px);
+  font-weight: 800;
+  color: #fff8e7;
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.55);
+}
+.puzzle-desc {
+  margin: 0;
+  font-size: clamp(11px, 1vw, 13px);
+  line-height: 1.5;
+  color: rgba(255, 248, 231, 0.82);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.55);
+}
+
+.puzzle-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.puzzle-desc {
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(255, 248, 231, 0.78);
+}
+
+/* ===== 通用按钮 ===== */
+.pixel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: linear-gradient(180deg, #343c44, #242a30);
+  color: #f4efe2;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  border-radius: 5px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    3px 3px 0 rgba(0, 0, 0, 0.4);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 60ms;
+}
+
+.pixel-btn:hover {
+  background: linear-gradient(180deg, #404952, #2c333a);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+.pixel-btn:active {
+  transform: translateY(2px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 1px 1px 0 rgba(0, 0, 0, 0.4);
+}
+
+.pixel-btn-mini {
+  padding: 4px 10px;
+  font-size: 12px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 2px 2px 0 rgba(0, 0, 0, 0.4);
+}
+
+.submit-btn {
+  padding: 8px 22px;
+  background: linear-gradient(180deg, #6cb061, #2f6b35);
+  border-color: rgba(255, 255, 255, 0.32);
+  font-size: 14px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 4px 0 #163018,
+    4px 4px 0 rgba(0, 0, 0, 0.4);
+}
+.submit-btn:hover { background: linear-gradient(180deg, #7ec273, #3a7a40); }
+.submit-btn:active {
+  transform: translateY(2px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 2px 0 #163018, 2px 2px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* 统一字体：故事梗概 / 未安排 / 行标签 都用 ZCOOL KuaiLe */
+.summary-label,
+.puzzle-text,
+.puzzle-title,
+.puzzle-desc,
+.pool-label,
+.pool-empty,
+.track-label {
+  font-family: "ZCOOL KuaiLe", "PingFang SC", system-ui, sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+/* ===== 行 2：未安排任务，左对齐，可换行不挤压甘特图 ===== */
+.task-pool {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  align-content: flex-start;
+  gap: 10px;
+  padding: 6px 0;
+  background: transparent;
+  border: 0;
+  min-height: 56px;
+}
+
+.pool-label {
+  color: #c8c8c8;
+  font-weight: 900;
+  font-size: 18px;
+  white-space: nowrap;
+  letter-spacing: 0.1em;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.65), 0 0 12px rgba(0, 0, 0, 0.4);
+  margin-right: 8px;
+}
+
+.pool-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-height: 38px;
+}
+
+.pool-empty {
+  color: #c8c8c8;
+  font-size: 18px;
+  font-weight: 900;
+  font-style: normal;
+  letter-spacing: 0.06em;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.65), 0 0 12px rgba(0, 0, 0, 0.4);
+}
+
+/* ===== 任务方块：复古糖果色票，大圆角 ===== */
+.task-block {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 48px;
+  padding: 0 14px;
+  color: #6F4B37;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.45), rgba(0, 0, 0, 0.06) 70%),
+    var(--block-color, #BE966C);
+  border: 2px solid #6F4B37;
+  border-radius: 18px;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -2px 0 rgba(111, 75, 55, 0.25),
+    0 4px 0 #6F4B37,
+    0 6px 14px rgba(0, 0, 0, 0.3);
+  filter: saturate(0.78);
+  font-weight: 800;
+  cursor: grab;
+  user-select: none;
+  white-space: nowrap;
+  touch-action: none;
+  transition: transform 80ms, box-shadow 80ms;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.task-block:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -2px 0 rgba(111, 75, 55, 0.25),
+    0 6px 0 #6F4B37,
+    0 10px 18px rgba(0, 0, 0, 0.36);
+}
+.task-block:active {
+  transform: translateY(2px);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -2px 0 rgba(111, 75, 55, 0.25),
+    0 1px 0 #6F4B37;
+}
+
+.task-block.dragging {
+  opacity: 0.35;
+  cursor: grabbing;
+}
+
+.task-block .tb-name { font-size: 14px; line-height: 1; font-weight: 800; }
+.task-block .tb-time { font-size: 11px; opacity: 0.78; line-height: 1; margin-top: 4px; font-weight: 700; }
+
+/* 飞行的拖拽镜像 */
+.task-block.dragging-ghost {
+  cursor: grabbing;
+  opacity: 0.95;
+  transform: scale(1.04) rotate(-1deg);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.18),
+    0 8px 18px rgba(0, 0, 0, 0.55),
+    2px 2px 0 rgba(0, 0, 0, 0.45);
+}
+
+/* 在轨道上的方块按时长决定宽度（每分钟 px 从 JS 设） */
+.gantt-track .task-block {
+  position: absolute;
+  height: calc(100% - 8px);
+  top: 4px;
+  /* 横排紧凑：名字 + 时间 一行，避免窄块时上下挤压 */
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 0 8px;
+  overflow: hidden;
+  min-width: 0;
+  container-type: inline-size;
+}
+
+.gantt-track .task-block .tb-name {
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.gantt-track .task-block .tb-time {
+  font-size: 10px;
+  line-height: 1;
+  margin-top: 0;
+  font-weight: 700;
+  opacity: 0.78;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+/* 块太窄就隐藏 "X分钟" 这行；再窄就把名字也压成 ellipsis */
+@container (max-width: 70px) {
+  .gantt-track .task-block .tb-time { display: none; }
+  .gantt-track .task-block { padding: 0 6px; gap: 0; }
+}
+@container (max-width: 32px) {
+  .gantt-track .task-block .tb-name { font-size: 11px; }
+  .gantt-track .task-block { padding: 0 4px; }
+}
+
+.gantt-track .task-block[data-autoplay="true"] {
+  background-image:
+    repeating-linear-gradient(45deg, transparent 0 9px, rgba(255, 255, 255, 0.22) 9px 18px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(0, 0, 0, 0.18));
+}
+
+/* ===== 行 3-5：甘特图直接铺在桌面，无外框 ===== */
+.gantt {
+  position: relative;
+  display: grid;
+  grid-template-rows: 28px 1fr;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 8px 4px 12px;
+  overflow: hidden;
+  min-height: 220px;
+}
+
+.gantt-axis {
+  position: relative;
+  padding-left: 100px;
+  height: 36px;
+  border-bottom: 2px dashed rgba(225, 207, 187, 0.22);
+  color: rgba(245, 230, 210, 0.85);
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  font-family: "ZCOOL KuaiLe", "PingFang SC", system-ui, sans-serif;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.55);
+}
+
+.gantt-axis .tick {
+  position: absolute;
+  bottom: 4px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+/* 中间档：只画一个小圆点 */
+.gantt-axis .tick.minor::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(225, 207, 187, 0.4);
+}
+
+/* 关键档：粗一点的竖线 + 数字 */
+.gantt-axis .tick.major::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -10px;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 10px;
+  border-radius: 1px;
+  background: rgba(245, 220, 175, 0.7);
+}
+.gantt-axis .tick.major { color: rgba(255, 235, 200, 0.95); }
+
+.gantt-tracks {
+  display: grid;
+  gap: 1.5vh;
+  padding-top: 1vh;
+}
+
+/* 每条轨道：细长，更接近时间轴的视觉比例 */
+.gantt-track {
+  position: relative;
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  align-items: center;
+  height: 6.5vh;
+  min-height: 40px;
+}
+
+.track-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  padding-right: 12px;
+  font-weight: 900;
+  font-size: 18px;
+  color: #c8c8c8;
+  letter-spacing: 0.06em;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.65), 0 0 12px rgba(0, 0, 0, 0.4);
+}
+
+/* emoji 图标全部隐藏（仅保留文字标签）*/
+.track-label .track-icon { display: none; }
+.track-label .track-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+/* 轨道：浅木色 + 柔和刻度 */
+.track-area {
+  position: relative;
+  height: 100%;
+  background:
+    linear-gradient(90deg, rgba(140, 95, 60, 0.30) 1px, transparent 1px) 0 0 / calc(var(--minute-px, 18px) * 5) 100%,
+    linear-gradient(90deg, rgba(255, 240, 215, 0.10) 1px, transparent 1px) 0 0 / var(--minute-px, 18px) 100%,
+    linear-gradient(180deg, rgba(220, 185, 140, 0.55), rgba(195, 158, 115, 0.55));
+  border: 2px solid rgba(140, 95, 60, 0.55);
+  border-radius: 12px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 245, 220, 0.35),
+    inset 0 -2px 0 rgba(120, 80, 50, 0.18),
+    0 3px 8px rgba(0, 0, 0, 0.22);
+}
+
+.track-area.drag-over {
+  background-color: rgba(120, 220, 140, 0.08);
+  border-color: rgba(120, 220, 140, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(120, 220, 140, 0.3);
+}
+
+.track-area.drag-invalid {
+  background-color: rgba(220, 80, 80, 0.08);
+  border-color: rgba(220, 80, 80, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(220, 80, 80, 0.3);
+}
+
+/* 拖拽落点预览（轨道内的虚线框） */
+.drop-preview {
+  position: absolute;
+  top: 4px;
+  height: calc(100% - 8px);
+  background: rgba(255, 216, 59, 0.22);
+  border: 2.5px dashed rgba(255, 216, 59, 0.95);
+  border-radius: 5px;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgba(255, 248, 231, 0.16), 0 0 12px rgba(255, 216, 59, 0.35);
+}
+
+/* 拖动时跟着光标的"第 X → Y 分钟"提示 */
+.drag-tip {
+  padding: 5px 10px;
+  background: linear-gradient(180deg, #2d1c0a, #1a1006);
+  color: #ffd83b;
+  border: 2px solid rgba(255, 216, 59, 0.7);
+  border-radius: 5px;
+  font: 700 12px/1 -apple-system, "PingFang SC", sans-serif;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* 总时间标线 */
+.total-line {
+  position: absolute;
+  top: 30px;
+  bottom: 16px;
+  width: 2px;
+  background: #ffd83b;
+  pointer-events: none;
+  box-shadow: 0 0 8px rgba(255, 216, 59, 0.7);
+}
+
+.total-line .total-label {
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 7px;
+  background: linear-gradient(180deg, #ffe06b, #f0c020);
+  color: #2d1a08;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+  border: 1.5px solid rgba(0, 0, 0, 0.55);
+  border-radius: 3px;
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.45);
+}
+
+/* ===== 底部：透明，浮在桌面 ===== */
+.puzzle-footer {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 6px 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* 毛玻璃按钮 — 暖棕调 */
+.glass-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 24px;
+  background: rgba(225, 207, 187, 0.18);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #E1CFBB;
+  border: 1.5px solid rgba(225, 207, 187, 0.45);
+  border-radius: 22px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 6px 18px rgba(0, 0, 0, 0.32);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: transform 80ms, background 120ms, border-color 120ms;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+}
+.glass-btn:hover {
+  background: rgba(225, 207, 187, 0.28);
+  border-color: #BE966C;
+  transform: translateY(-1px);
+}
+.glass-btn:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 2px 8px rgba(0, 0, 0, 0.32);
+}
+.glass-btn-primary {
+  background: linear-gradient(180deg, rgba(190, 150, 108, 0.55), rgba(134, 87, 56, 0.55));
+  border-color: rgba(225, 207, 187, 0.7);
+  color: #E1CFBB;
+  font-size: 15px;
+  padding: 12px 28px;
+}
+.glass-btn-primary:hover {
+  background: linear-gradient(180deg, rgba(210, 170, 128, 0.65), rgba(154, 100, 65, 0.65));
+  border-color: #E1CFBB;
+}
+
+.status-info {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  color: #E1CFBB;
+  font-size: 14px;
+  font-weight: 700;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.55);
+}
+
+.status-info .time-readout {
+  font-size: 24px;
+  color: #ffd83b;
+  font-weight: 800;
+  min-width: 42px;
+  text-align: center;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);
+}
+
+.result-msg {
+  font-size: 13px;
+  font-weight: 700;
+  text-align: right;
+  min-height: 20px;
+}
+
+.result-msg.success { color: #7effa8; }
+.result-msg.fail    { color: #ffb3b3; }
+.result-msg.hint    { color: #ffd680; }
+
+/* ===== 任务方块在轨道上的状态 ===== */
+.task-block[data-placed="true"] {
+  cursor: grab;
+}
+
+.task-block[data-placed="true"]:hover .tb-remove {
+  opacity: 1;
+}
+
+.tb-remove {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  width: 18px;
+  height: 18px;
+  background: #c4423a;
+  color: #fff;
+  border: 2px solid rgba(0, 0, 0, 0.55);
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms, transform 120ms;
+  line-height: 1;
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.45);
+}
+
+.tb-remove:hover { transform: scale(1.15); }
+
+@keyframes shake-x {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-4px); }
+  75%      { transform: translateX(4px); }
+}
+.task-block.shake { animation: shake-x 180ms ease-in-out 2; }

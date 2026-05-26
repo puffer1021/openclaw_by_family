@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>摄像头最小测试</title>
+  <style>
+    body { background: #222; margin: 0; display: flex; flex-direction: column; align-items: center; padding: 40px; gap: 20px; }
+    button { padding: 14px 32px; font-size: 18px; border-radius: 8px; border: none; background: #ffd83b; cursor: pointer; font-weight: 700; }
+    #log { color: #aaa; font-size: 14px; font-family: monospace; white-space: pre; }
+  </style>
+</head>
+<body>
+  <button id="btn">开摄像头</button>
+  <div id="log">等待...</div>
+
+  <script>
+    const log = document.getElementById("log");
+    function append(msg) { log.textContent += "\n" + msg; console.log(msg); }
+
+    document.getElementById("btn").addEventListener("click", async () => {
+      try {
+        append("1. 申请 getUserMedia...");
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        append("2. 拿到 stream，tracks: " + stream.getVideoTracks().length);
+
+        const video = document.createElement("video");
+        video.autoplay = true;
+        video.playsInline = true;
+        video.muted = true;
+        video.style.cssText = "width:400px; height:300px; background:red; display:block;";
+        document.body.appendChild(video);
+        append("3. video 已插入 body");
+
+        video.srcObject = stream;
+        append("4. srcObject 已设置，readyState=" + video.readyState);
+
+        video.addEventListener("loadedmetadata", () => append("  → loadedmetadata 触发，" + video.videoWidth + "x" + video.videoHeight));
+        video.addEventListener("loadeddata",     () => append("  → loadeddata 触发"));
+        video.addEventListener("playing",        () => append("  → playing 触发 ✓"));
+        video.addEventListener("error",          (e) => append("  → error: " + video.error?.message));
+
+        const result = await video.play();
+        append("5. play() resolved，result=" + result);
+      } catch (err) {
+        append("❌ 错误: " + err.name + " - " + err.message);
+      }
+    });
+  </script>
+</body>
+</html>

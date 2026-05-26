@@ -1,0 +1,376 @@
+/* ================================================
+   情绪房间 · 猫猫对话界面
+   ================================================ */
+
+/* Override: emotion-page fills viewport, body scrolls normally */
+.emotion-page {
+  overflow: hidden;
+  height: 100vh;
+  display: block;
+}
+
+/* game-shell stays the fixed pixel-art frame */
+.emotion-page .game-shell {
+  min-width: 0;
+  padding: 0;
+  text-align: initial;
+  background: #101416;
+  border: 0;
+  box-shadow: none;
+}
+
+/* ---- Status pill in top-nav ---- */
+.emo-status {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 2px solid transparent;
+}
+.emo-status.idle    { background: rgba(40,44,52,0.9); color: #888;   border-color: #333; }
+.emo-status.wait    { background: rgba(70,55,10,0.9);  color: #ffd55a; border-color: #a07d22; }
+.emo-status.live    { background: rgba(20,72,40,0.9);  color: #7effa8; border-color: #2d8f50; }
+.emo-status.error   { background: rgba(80,20,30,0.9);  color: #ff8fa3; border-color: #7d2638; }
+
+/* ---- Cat stage: fills the second grid row (91.1%) of game-shell ---- */
+.cat-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #1a0e0a;
+}
+
+/* Room background — fills stage, keep pixel art proportions */
+.room-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  image-rendering: pixelated;
+  display: block;
+  z-index: 0;
+}
+
+/* ============================================
+   Cat character — 即梦 Seedance 生成的真实动画视频
+   黑底用 mix-blend-mode: screen 抠掉
+   ============================================ */
+.cat-character {
+  position: absolute;
+  left: 18%;
+  bottom: 8%;
+  width: 22%;
+  z-index: 2;
+  pointer-events: auto;
+  cursor: pointer;
+  object-fit: contain;
+  image-rendering: auto;
+  /* WebM 已带 alpha 通道，无需 blend mode */
+  /* 入场淡入 */
+  animation: catEnter 500ms ease both;
+}
+
+@keyframes catEnter {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.cat-character:active {
+  filter: brightness(1.08);
+}
+
+/* ============================================
+   Camera PIP — 视频模式下右上角小摄像头预览
+   ============================================ */
+.cam-pip {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 168px;
+  height: 126px;
+  z-index: 7;
+  border: 3px solid rgba(255, 255, 255, 0.85);
+  border-radius: 6px;
+  background: #000;
+  overflow: hidden;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.45);
+}
+.cam-pip video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* 前置摄像头镜像 */
+  transform: scaleX(-1);
+  /* Chrome srcObject 黑屏 workaround：
+     overflow:hidden 父层 + CSS transform 叠加时 Chrome 不自动建 GPU 合成层。
+     will-change: transform 强制创建独立 compositor layer，srcObject 才能正常渲染。 */
+  will-change: transform;
+}
+.cam-pip .cam-flip {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+.cam-pip .cam-flip:hover { background: rgba(0, 0, 0, 0.85); }
+
+/* ===== 模式切换按钮 ===== */
+.emo-side-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+/* mode-btn 仅做 video 模式的主色提示，其他样式继承 glass-btn */
+.mode-btn[data-mode="video"] {
+  background: linear-gradient(180deg, rgba(120, 170, 230, 0.45), rgba(60, 100, 180, 0.45));
+  border-color: rgba(180, 220, 255, 0.6);
+}
+.mode-btn[data-mode="video"]:hover:not(:disabled) {
+  background: linear-gradient(180deg, rgba(140, 190, 240, 0.55), rgba(80, 130, 200, 0.55));
+}
+.mode-btn .mode-label { font-size: 13px; }
+
+/* ============================================
+   Speech bubbles — 漫画风格对话框，定位在猫头顶
+   ============================================ */
+.bubble-layer {
+  position: absolute;
+  transform: translateX(-50%);
+  width: min(260px, 28%);
+  display: flex;
+  flex-direction: column-reverse;  /* 新气泡在底部（靠近角色） */
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* 猫的气泡 — 浮在猫头顶（猫位置 left:18%~40%，中心 ~29%） */
+.bubble-layer-cat {
+  left: 29%;
+  bottom: 62%;
+}
+
+/* 男孩的气泡 — 浮在男孩头顶（男孩在背景图大约 left:55%~70%，中心 ~62%） */
+.bubble-layer-user {
+  left: 62%;
+  bottom: 64%;
+}
+
+.emo-bubble {
+  position: relative;
+  max-width: 100%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: clamp(12px, 1.2vw, 15px);
+  line-height: 1.4;
+  word-break: break-word;
+  pointer-events: auto;
+  animation: bubblePop 220ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  border: 2.5px solid rgba(40, 30, 20, 0.85);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.35);
+}
+
+/* 对话框尾巴（小三角指向下方的角色） */
+.emo-bubble::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  background: inherit;
+  border-right: 2.5px solid rgba(40, 30, 20, 0.85);
+  border-bottom: 2.5px solid rgba(40, 30, 20, 0.85);
+  transform: translateX(-50%) rotate(45deg);
+  z-index: -1;
+}
+
+/* 猫说话 — 米白色对话框（像绘本对白） */
+.emo-bubble.assistant {
+  align-self: center;
+  background: #fff8d9;
+  color: #3b2e1a;
+}
+
+/* 用户说话 — 暖橙色对话框 */
+.emo-bubble.user {
+  align-self: center;
+  background: #ffd4a8;
+  color: #4a2c12;
+}
+
+/* 系统提示 — 小且不显眼 */
+.emo-bubble.system {
+  align-self: center;
+  background: rgba(30, 34, 40, 0.85);
+  color: rgba(255, 248, 231, 0.78);
+  border-color: rgba(255, 255, 255, 0.18);
+  font-size: 11px;
+  padding: 5px 10px;
+  border-radius: 10px;
+}
+.emo-bubble.system::after { display: none; }
+
+@keyframes bubblePop {
+  0%   { opacity: 0; transform: translateY(8px) scale(0.85); }
+  60%  { opacity: 1; transform: translateY(0) scale(1.04); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes bubbleFade {
+  to { opacity: 0; transform: translateY(-6px); }
+}
+
+/* 旧气泡淡出 */
+.emo-bubble.fading {
+  animation: bubbleFade 400ms ease forwards;
+}
+
+/* ---- Voice dock ---- */
+.voice-dock {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 12px 20px 16px;
+  background: linear-gradient(0deg, rgba(8,10,14,0.96) 0%, rgba(8,10,14,0.78) 70%, transparent 100%);
+}
+
+/* ---- Glass buttons (圆角透明毛玻璃) ---- */
+.glass-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 24px;
+  background: rgba(225, 207, 187, 0.18);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #E1CFBB;
+  border: 1.5px solid rgba(225, 207, 187, 0.45);
+  border-radius: 22px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 6px 18px rgba(0, 0, 0, 0.32);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: transform 80ms, background 120ms, border-color 120ms, opacity 120ms;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+}
+.glass-btn:hover:not(:disabled) {
+  background: rgba(225, 207, 187, 0.28);
+  border-color: #BE966C;
+  transform: translateY(-1px);
+}
+.glass-btn:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 2px 8px rgba(0, 0, 0, 0.32);
+}
+.glass-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.glass-btn-primary {
+  background: linear-gradient(180deg, rgba(190, 150, 108, 0.55), rgba(134, 87, 56, 0.55));
+  border-color: rgba(225, 207, 187, 0.7);
+  font-size: 15px;
+  padding: 12px 28px;
+}
+.glass-btn-primary:hover:not(:disabled) {
+  background: linear-gradient(180deg, rgba(210, 170, 128, 0.65), rgba(154, 100, 65, 0.65));
+  border-color: #E1CFBB;
+}
+
+.emo-main-btns {
+  display: flex;
+  gap: 12px;
+}
+
+/* Start / Stop: pixel-art style matching creation.css */
+.start-btn {
+  min-height: 48px;
+  padding: 0 22px;
+  color: #fff8e7;
+  background: linear-gradient(180deg, #2d7a4e, #1b5036);
+  border-color: rgba(255,255,255,0.32);
+  border-radius: 4px;
+  box-shadow:
+    0 5px 0 #0e2b1e,
+    0 7px 14px rgba(0,0,0,0.38),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+  font-size: 15px;
+}
+.start-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #3a9960, #226640);
+}
+.start-btn:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+.stop-btn {
+  min-height: 48px;
+  padding: 0 22px;
+  color: #fff8e7;
+  background: linear-gradient(180deg, #7a2d2d, #501b1b);
+  border-color: rgba(255,255,255,0.32);
+  border-radius: 4px;
+  box-shadow:
+    0 5px 0 #2e0e0e,
+    0 7px 14px rgba(0,0,0,0.38),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+  font-size: 15px;
+}
+.stop-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #993a3a, #662222);
+}
+.stop-btn:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+/* Ghost side buttons */
+.ghost-btn {
+  min-height: 40px;
+  padding: 0 16px;
+  color: rgba(255,248,231,0.78);
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.16);
+  border-radius: 4px;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.28);
+  font-size: 13px;
+}
+.ghost-btn:hover:not(:disabled) {
+  background: rgba(255,255,255,0.13);
+  border-color: rgba(255,255,255,0.3);
+  color: #fff8e7;
+}
+
+.btn-icon { font-size: 18px; line-height: 1; }
+
+/* ---- Waveform pulse when active ---- */
+.cat-stage[data-active="true"] .cat-video {
+  /* subtle pulsing border to show live state */
+  outline: 3px solid rgba(100,220,140,0.28);
+  outline-offset: -3px;
+}

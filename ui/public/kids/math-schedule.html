@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数学岛 · 合理安排时间</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="math-schedule.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap">
+</head>
+<body class="math-page">
+  <main class="game-shell" aria-label="数学岛">
+    <header class="top-nav">
+      <div class="brand">Sanctuary</div>
+      <nav class="tabs" aria-label="端口切换">
+        <button class="tab-button active" type="button">孩子模式</button>
+        <button class="tab-button" type="button" onclick="location.href='parent.html'">家长模式</button>
+      </nav>
+      <div class="nav-actions">
+        <button class="icon-button" type="button" aria-label="全屏">⛶</button>
+        <button class="icon-button" type="button" aria-label="返回"
+          onclick="history.length>1?history.back():location.href='learning.html'">✕</button>
+      </div>
+    </header>
+
+    <div class="math-layout">
+
+      <!-- 故事梗概（标题"时间分配游戏"在背景木牌里，标题名也省略）-->
+      <section class="puzzle-card">
+        <p class="puzzle-summary">
+          <span class="summary-label">故事梗概：</span><span class="puzzle-text" id="puzzleDesc">载入中…</span>
+        </p>
+        <h2 class="puzzle-title" id="puzzleTitle" hidden></h2>
+      </section>
+
+      <!-- 任务池（待拖拽的方块） -->
+      <section class="task-pool" id="taskPool" aria-label="任务池">
+        <div class="pool-label">未安排：</div>
+        <div class="pool-items" id="poolItems"></div>
+      </section>
+
+      <!-- 甘特图 -->
+      <section class="gantt" id="gantt">
+        <!-- 时间刻度 -->
+        <div class="gantt-axis" id="ganttAxis"></div>
+
+        <!-- 资源轨道 -->
+        <div class="gantt-tracks" id="ganttTracks"></div>
+
+        <!-- 总时间标线 -->
+        <div class="total-line" id="totalLine" hidden>
+          <span class="total-label" id="totalLineLabel"></span>
+        </div>
+      </section>
+
+      <!-- 底部状态栏 -->
+      <footer class="puzzle-footer">
+        <div class="status-info">
+          <span>已用时间</span>
+          <strong class="time-readout" id="timeReadout">--</strong>
+          <span>分钟</span>
+        </div>
+        <div class="footer-actions">
+          <button class="glass-btn" id="newBtn" type="button">🎲 换一题</button>
+          <button class="glass-btn" id="resetBtn" type="button">↺ 重来</button>
+          <button class="glass-btn" id="hintBtn" type="button">💡 提示</button>
+          <button class="glass-btn glass-btn-primary" id="submitBtn" type="button">✓ 提交答案</button>
+        </div>
+        <div class="result-msg" id="resultMsg"></div>
+      </footer>
+
+    </div>
+  </main>
+  <script src="math-schedule.js" type="module"></script>
+</body>
+</html>

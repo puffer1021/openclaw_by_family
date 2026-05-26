@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数学岛 · 拍照解题</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="math.css">
+</head>
+<body class="math-page">
+  <main class="game-shell" aria-label="数学岛">
+    <header class="top-nav">
+      <div class="brand">Sanctuary</div>
+      <nav class="tabs" aria-label="端口切换">
+        <button class="tab-button active" type="button">孩子模式</button>
+        <button class="tab-button" type="button" onclick="location.href='parent.html'">家长模式</button>
+      </nav>
+      <div class="nav-actions">
+        <button class="icon-button" type="button" aria-label="经典模式 · 时间安排"
+          onclick="location.href='math-schedule.html'" title="经典模式">⏱</button>
+        <button class="icon-button" type="button" aria-label="返回学习"
+          onclick="history.length>1?history.back():location.href='learning.html'">✕</button>
+      </div>
+    </header>
+
+    <div class="math-stage" id="mathStage" data-state="idle">
+      <div class="classroom-scene">
+        <div class="blackboard-area">
+
+          <!-- IDLE：仅两个按钮 -->
+          <section class="idle-pane" id="idlePane">
+            <div class="board-buttons">
+              <button class="board-btn camera-btn" id="cameraBtn" type="button" aria-label="拍照">
+                <img src="assets/ui/btn-camera.png" alt="" class="board-btn-icon">
+                <span>拍照</span>
+              </button>
+              <button class="board-btn upload-btn" id="uploadBtn" type="button" aria-label="上传图片">
+                <img src="assets/ui/btn-photos.png" alt="" class="board-btn-icon">
+                <span>上传图片</span>
+              </button>
+            </div>
+            <input type="file" id="fileInput" accept="image/*" hidden>
+            <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
+          </section>
+
+        </div>
+
+        <!-- SOLVING / DONE：题目和视频精准嵌入背景的两个黄色虚线框 -->
+        <section class="solve-pane" id="solvePane" hidden>
+          <!-- 左：题目区（嵌入背景题目框）-->
+          <div class="solve-slot solve-slot-problem">
+            <img id="problemImg" alt="题目">
+          </div>
+
+          <!-- 右：解答区（嵌入背景解答框）-->
+          <div class="solve-slot solve-slot-answer">
+            <div class="solve-loading" id="solveLoading">
+              <img class="solve-loading-spinner" src="assets/ui/hourglass.png" alt="加载中">
+
+              <h3 class="solve-loading-title" id="solveTitle">小喵在画动画…</h3>
+              <p class="solve-loading-hint" id="solveHint"></p>
+            </div>
+            <iframe class="solve-iframe" id="solveIframe" hidden
+                    allow="autoplay; fullscreen"
+                    allowtransparency="true"
+                    scrolling="no"
+                    title="解题动画"></iframe>
+          </div>
+
+          <!-- 操作按钮：黑板下方居中 -->
+          <div class="solve-actions">
+            <button class="pixel-btn pixel-btn-mini" id="changeBtn" type="button">↺ 换一张</button>
+            <button class="pixel-btn pixel-btn-mini" id="stopBtn" type="button" hidden>⏹ 停止</button>
+          </div>
+        </section>
+      </div>
+    </div>
+
+  </main>
+  <script src="math.js" type="module"></script>
+</body>
+</html>

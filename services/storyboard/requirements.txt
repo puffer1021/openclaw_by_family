@@ -1,0 +1,10 @@
+# 家庭虾 · 数学岛拍照解题 — Manim 动画渲染依赖
+# 安装方式（项目根目录）：
+#   python3 -m venv .venv
+#   .venv/bin/pip install -r services/storyboard/requirements.txt
+#
+# 系统依赖（macOS）：
+#   brew install ffmpeg cairo pango pkg-config
+manim==0.19.0
+importlib_metadata>=8.0.0
+Pillow>=11.0.0

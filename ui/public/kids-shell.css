@@ -1,0 +1,165 @@
+/* Outer shell — pixel topnav matching the kids' "小十二的家" design.
+   Variables here are scoped so they don't leak into <openclaw-app>. */
+
+#shell-topnav {
+  --shell-topnav-h: 64px;
+  --shell-ink: #f6eedb;
+  --shell-gold: #ffd638;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background: #101416;
+}
+
+.shell-topnav {
+  position: relative;
+  height: var(--shell-topnav-h);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 24px;
+  padding: 0 24px;
+  color: var(--shell-ink);
+  background: linear-gradient(180deg, #14241c, #0d1814);
+  border-bottom: 3px solid #050708;
+  box-shadow: inset 0 -2px 0 rgba(255, 255, 255, 0.06);
+  font-family: "Courier New", Courier, monospace;
+  image-rendering: pixelated;
+}
+
+.shell-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 70%;
+  padding: 0 14px;
+  color: #fff;
+  background: #14171b;
+  border: 3px solid #050607;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.07), 4px 4px 0 rgba(0, 0, 0, 0.35);
+  font-size: clamp(16px, 1.6vw, 22px);
+  font-weight: 700;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.shell-tabs {
+  display: flex;
+  align-items: stretch;
+  gap: 24px;
+  height: 100%;
+}
+
+.shell-tab {
+  appearance: none;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  min-width: 110px;
+  height: 100%;
+  padding: 0 24px;
+  color: rgba(246, 238, 219, 0.82);
+  background: transparent;
+  border: 2px solid transparent;
+  border-bottom: 5px solid transparent;
+  font-size: clamp(14px, 1.3vw, 18px);
+  transition: transform 80ms steps(2), border-color 120ms steps(2), background 120ms steps(2);
+}
+
+.shell-tab.active {
+  color: var(--shell-gold);
+  border-bottom-color: var(--shell-gold);
+  background: rgba(255, 255, 255, 0.04);
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45);
+}
+
+.shell-tab:hover,
+.shell-tab:focus-visible {
+  background: rgba(255, 255, 255, 0.07);
+  outline: none;
+}
+
+.shell-tab:active {
+  transform: translateY(2px);
+}
+
+.shell-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.shell-icon-btn {
+  appearance: none;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  color: var(--shell-ink);
+  background: #24272b;
+  border: 2px solid #0a0b0c;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.12), 3px 3px 0 rgba(0, 0, 0, 0.35);
+  font-size: 18px;
+  font-family: inherit;
+  transition: transform 80ms steps(2), border-color 120ms steps(2);
+}
+
+.shell-icon-btn:hover,
+.shell-icon-btn:focus-visible {
+  border-color: #e7f0e0;
+  outline: none;
+}
+
+.shell-icon-btn:active {
+  transform: translateY(2px);
+}
+
+/* Mode panes fill the full viewport. */
+.shell-pane {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+.shell-pane[hidden] {
+  /* keep layout alive so <openclaw-app> connects + measures correctly,
+     but make it invisible + non-interactive */
+  display: block !important;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+#kids-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: #101416;
+}
+
+/* Parent mode: own topnav at top + openclaw below. */
+#mode-parent {
+  display: flex;
+  flex-direction: column;
+  background: #101416;
+}
+
+.shell-parent-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.shell-parent-body > openclaw-app {
+  display: block;
+  min-height: 100%;
+}

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>创造房间 · Sanctuary</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="creation.css">
+</head>
+<body class="creation-page">
+  <main class="game-shell" aria-label="创造房间">
+    <header class="top-nav">
+      <div class="brand">Sanctuary</div>
+      <nav class="tabs" aria-label="模式切换">
+        <button class="tab-button active" type="button">孩子模式</button>
+        <button class="tab-button" type="button" onclick="location.href='parent.html'">家长模式</button>
+      </nav>
+      <div class="nav-actions">
+        <button class="icon-button" type="button" aria-label="全屏">⛶</button>
+        <button class="icon-button" type="button" aria-label="返回主页" onclick="history.length>1?history.back():location.href='index.html'">✕</button>
+      </div>
+    </header>
+
+    <div class="creation-layout" id="creationLayout">
+      <!-- LEFT SIDEBAR: 素材库 / 画笔 -->
+      <aside class="creation-sidebar" id="creationSidebar">
+        <div class="sidebar-tabs" role="tablist">
+          <button class="sidebar-tab active" type="button" data-panel="assets" role="tab" aria-selected="true">蛋蛋的口袋</button>
+          <button class="sidebar-tab" type="button" data-panel="brush" role="tab" aria-selected="false">画笔</button>
+        </div>
+
+        <!-- 素材库面板 -->
+        <div class="sidebar-panel sidebar-assets active" id="panelAssets" role="tabpanel">
+          <div class="asset-subtabs" role="tablist">
+            <button class="asset-subtab active" type="button" data-cat="foods">吃的</button>
+            <button class="asset-subtab" type="button" data-cat="items">小东西</button>
+          </div>
+          <div class="asset-grid" id="assetGrid"></div>
+        </div>
+
+        <!-- 画笔工具面板 -->
+        <div class="sidebar-panel sidebar-brush" id="panelBrush" role="tabpanel" hidden>
+          <div class="brush-section">
+            <div class="brush-section-label">工具</div>
+            <div class="tool-pair">
+              <button class="big-tool-btn active" type="button" data-tool="brush">画笔</button>
+              <button class="big-tool-btn" type="button" data-tool="eraser">橡皮</button>
+            </div>
+          </div>
+
+          <div class="brush-section">
+            <div class="brush-section-label">粗细</div>
+            <div class="size-row" id="sizeRow">
+              <button class="size-btn" type="button" data-size="2" aria-label="细"><span class="size-dot" style="width:4px;height:4px"></span></button>
+              <button class="size-btn active" type="button" data-size="5" aria-label="中"><span class="size-dot" style="width:8px;height:8px"></span></button>
+              <button class="size-btn" type="button" data-size="10" aria-label="粗"><span class="size-dot" style="width:14px;height:14px"></span></button>
+              <button class="size-btn" type="button" data-size="18" aria-label="超粗"><span class="size-dot" style="width:22px;height:22px"></span></button>
+            </div>
+          </div>
+
+          <div class="brush-section">
+            <div class="brush-section-label">颜色</div>
+            <div class="color-grid" id="colorGrid"></div>
+          </div>
+
+          <div class="brush-section">
+            <div class="brush-section-label">操作</div>
+            <div class="brush-group">
+              <button class="tool-btn tool-text" type="button" id="undoBtn">撤销</button>
+              <button class="tool-btn tool-text" type="button" id="clearOverlayBtn">擦掉涂鸦</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- CENTER: 创作区 -->
+      <section class="creation-left">
+
+        <!-- 画板舞台：有画时全屏铺画，没画时为空，生成的图作为新页加入幻灯 -->
+        <div class="canvas-stage" id="easelFrame">
+          <div class="canvas-empty" id="easelPlaceholder"></div>
+
+          <!-- 原图 + 涂鸦层（永远是第 0 页） -->
+          <div class="canvas-slide active" data-slide="0">
+            <img class="canvas-image" id="easelArt" alt="你的画" hidden>
+            <canvas class="canvas-overlay" id="canvasOverlay" hidden></canvas>
+          </div>
+
+          <!-- 翻页箭头 + 页码点 -->
+          <button class="canvas-nav canvas-nav-prev" type="button" id="slidePrev" aria-label="上一张" hidden>‹</button>
+          <button class="canvas-nav canvas-nav-next" type="button" id="slideNext" aria-label="下一张" hidden>›</button>
+          <div class="canvas-dots" id="slideDots" hidden></div>
+        </div>
+
+        <!-- 主行动栏（毛玻璃按钮）：拍照 / 上传 | 生视频 / 生图 / 清空 -->
+        <div class="action-row" id="editToolbar">
+          <input type="file" id="fileInput" accept="image/*" hidden>
+          <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
+          <button class="glass-btn" type="button" id="cameraBtn">拍照</button>
+          <button class="glass-btn" type="button" id="uploadBtn">上传</button>
+          <span class="action-spacer"></span>
+          <button class="glass-btn glass-btn-primary" type="button" id="generateVideoBtn">生视频</button>
+          <button class="glass-btn glass-btn-primary" type="button" id="generateImageBtn">生图</button>
+          <button class="glass-btn" type="button" id="clearBtn">清空</button>
+        </div>
+
+
+      </section>
+
+      <!-- RIGHT: 对话区，伙伴是首页那只蛋（随等级进化） -->
+      <aside class="creation-right">
+        <div class="coach-header">
+          <img class="coach-avatar" id="coachAvatar" src="assets/cat/stages/1-egg.png" alt="我的伙伴">
+          <div class="coach-name-card">
+            <strong id="coachName">猫猫蛋</strong>
+            <span id="coachSubtitle">陪你一起创作</span>
+          </div>
+        </div>
+        <div class="chat-window" id="chatWindow" aria-live="polite"></div>
+        <form class="chat-input-row" id="chatForm">
+          <input
+            type="text"
+            id="chatInput"
+            placeholder="说点什么，或按右边话筒用嘴巴说…"
+            autocomplete="off"
+            aria-label="输入消息">
+          <button type="button" class="mic-btn" id="micBtn" aria-label="语音输入">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+              <rect x="9" y="3" width="6" height="11" rx="3"/>
+              <path d="M5 11a7 7 0 0 0 14 0"/>
+              <line x1="12" y1="18" x2="12" y2="22"/>
+              <line x1="9" y1="22" x2="15" y2="22"/>
+            </svg>
+          </button>
+          <button type="submit" class="pixel-btn pixel-btn-send" id="sendBtn">发送</button>
+        </form>
+      </aside>
+
+    </div>
+
+  </main>
+
+  <script src="creation.js" type="module"></script>
+</body>
+</html>

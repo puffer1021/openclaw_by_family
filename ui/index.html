@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OpenClaw Control</title>
+    <meta name="color-scheme" content="dark light" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap" />
+    <style>
+      .shell-brand,
+      .shell-tab {
+        font-family: "ZCOOL KuaiLe", system-ui, sans-serif;
+      }
+    </style>
+    <script>
+      (function () {
+        var THEMES = { claw: 1, knot: 1, dash: 1 };
+        var MODES = { system: 1, light: 1, dark: 1 };
+        var LEGACY = {
+          dark: "claw:dark",
+          light: "claw:light",
+          openknot: "knot:dark",
+          fieldmanual: "dash:dark",
+          clawdash: "dash:light",
+          system: "claw:system",
+        };
+        try {
+          var keys = Object.keys(localStorage);
+          var raw;
+          for (var i = 0; i < keys.length; i++) {
+            if (keys[i].indexOf("openclaw.control.settings.v1") === 0) {
+              raw = localStorage.getItem(keys[i]);
+              if (raw) break;
+            }
+          }
+          if (!raw) return;
+          var s = JSON.parse(raw);
+          var t = s && s.theme;
+          var m = s && s.themeMode;
+          if (typeof t !== "string") t = "";
+          if (typeof m !== "string") m = "";
+          var legacy = LEGACY[t];
+          var theme = THEMES[t] ? t : legacy ? legacy.split(":")[0] : "claw";
+          var mode = MODES[m] ? m : legacy ? legacy.split(":")[1] : "system";
+          if (mode === "system") {
+            mode = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+          }
+          var resolved =
+            theme === "knot"
+              ? mode === "light"
+                ? "openknot-light"
+                : "openknot"
+              : theme === "dash"
+                ? mode === "light"
+                  ? "dash-light"
+                  : "dash"
+                : mode === "light"
+                  ? "light"
+                  : "dark";
+          document.documentElement.setAttribute("data-theme", resolved);
+          document.documentElement.setAttribute(
+            "data-theme-mode",
+            resolved.indexOf("light") !== -1 ? "light" : "dark",
+          );
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <link rel="stylesheet" href="/kids-shell.css" />
+    <div id="mode-kids" class="shell-pane">
+      <iframe
+        id="kids-frame"
+        src="/kids/index.html"
+        title="孩子模式"
+        loading="eager"
+      ></iframe>
+    </div>
+    <div id="mode-parent" class="shell-pane" hidden>
+      <header class="shell-topnav" aria-label="端口切换">
+        <div class="shell-brand">Sanctuary</div>
+        <nav class="shell-tabs" role="tablist">
+          <button class="shell-tab" type="button" data-mode="kids" role="tab" aria-selected="false">孩子模式</button>
+          <button class="shell-tab active" type="button" data-mode="parent" role="tab" aria-selected="true">家长模式</button>
+        </nav>
+        <div class="shell-actions">
+          <button class="shell-icon-btn" type="button" id="shell-fullscreen" aria-label="全屏">⛶</button>
+          <button class="shell-icon-btn" type="button" aria-label="设置">⚙</button>
+        </div>
+      </header>
+      <div class="shell-parent-body">
+        <openclaw-app></openclaw-app>
+      </div>
+    </div>
+    <script>
+      (function () {
+        function currentMode() {
+          var h = (location.hash || "").replace(/^#\/?/, "");
+          return h === "parent" ? "parent" : "kids";
+        }
+        function apply() {
+          var mode = currentMode();
+          var kids = document.getElementById("mode-kids");
+          var parent = document.getElementById("mode-parent");
+          if (kids) kids.hidden = mode !== "kids";
+          if (parent) parent.hidden = mode !== "parent";
+          document.documentElement.setAttribute("data-app-mode", mode);
+        }
+        // Inject a tiny shim into the kids iframe so the existing
+        // 孩子端口 / 父母端口 buttons actually switch our outer mode.
+        function wireKidsTabs() {
+          var f = document.getElementById("kids-frame");
+          if (!f) return;
+          try {
+            var doc = f.contentDocument;
+            if (!doc || doc.getElementById("__kids_tab_shim")) return;
+            var script = doc.createElement("script");
+            script.id = "__kids_tab_shim";
+            script.textContent = [
+              "(function(){",
+              "  var tabs = document.querySelectorAll('.tab-button');",
+              "  tabs.forEach(function(b){",
+              "    b.addEventListener('click', function(){",
+              "      var label = (b.textContent || '').trim();",
+              "      var mode = label.indexOf('父母') === 0 ? 'parent' : 'kids';",
+              "      try { window.parent.postMessage({ type: 'family-shrimp:set-mode', mode: mode }, '*'); } catch(_) {}",
+              "    }, true);",
+              "  });",
+              "})();"
+            ].join("\\n");
+            doc.body.appendChild(script);
+          } catch (_) {}
+        }
+        var f0 = document.getElementById("kids-frame");
+        if (f0) f0.addEventListener("load", wireKidsTabs);
+        window.addEventListener("message", function (ev) {
+          var d = ev && ev.data;
+          if (d && d.type === "family-shrimp:set-mode" && (d.mode === "kids" || d.mode === "parent")) {
+            location.hash = "#/" + d.mode;
+          }
+        });
+        document.addEventListener("click", function (e) {
+          var t = e.target;
+          if (!t) return;
+          if (t.id === "shell-fullscreen") {
+            if (document.fullscreenElement) {
+              document.exitFullscreen();
+            } else {
+              document.documentElement.requestFullscreen().catch(function () {});
+            }
+            return;
+          }
+          if (t.classList && t.classList.contains("shell-tab")) {
+            var m = t.getAttribute("data-mode");
+            if (!m) return;
+            location.hash = "#/" + m;
+          }
+        });
+        window.addEventListener("hashchange", apply);
+        apply();
+      })();
+    </script>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

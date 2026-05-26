@@ -1,0 +1,452 @@
+/* =================================================
+   数学岛 · 拍照解题（教室黑板版）
+   ================================================= */
+.math-page {
+  display: block;
+  height: 100vh;
+  overflow: hidden;
+  background: #08090b;
+}
+
+.math-page .game-shell {
+  display: grid;
+  grid-template-rows: var(--top-ratio) 1fr;
+  padding: 0;
+  background: #101416;
+  border: 0;
+  box-shadow: none;
+}
+
+.math-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: #2a1f15;
+}
+
+/* ===== 教室场景：保持 1672:941 比例不被裁剪 ===== */
+.classroom-scene {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: calc(100vh * 1672 / 941);
+  max-height: calc(100vw * 941 / 1672);
+  aspect-ratio: 1672 / 941;
+  background: url('assets/rooms/classroom.png') center/contain no-repeat;
+  image-rendering: pixelated;
+  transition: background-image 200ms;
+}
+
+/* 解题状态切到带题目/解答虚线框的黑板图 */
+.math-stage[data-state="solving"] .classroom-scene,
+.math-stage[data-state="done"] .classroom-scene,
+.math-stage[data-state="error"] .classroom-scene {
+  background-image: url('assets/rooms/classroom-board.png');
+}
+
+/* ===== 黑板区（绿色书写区）：基于教室图比例估算 ===== */
+.blackboard-area {
+  position: absolute;
+  left: 13.5%;
+  top: 13%;
+  width: 71.5%;
+  height: 60%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  padding: 2.5% 4%;
+  box-sizing: border-box;
+  color: #f4efe2;
+  font-family: inherit;
+}
+
+/* ===== IDLE：把题目拍下来或传上来 ===== */
+.idle-pane {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2vh;
+  height: 100%;
+  text-align: center;
+}
+
+.board-title {
+  margin: 0;
+  color: #fff8e7;
+  font-size: clamp(18px, 2.4vw, 32px);
+  font-weight: 800;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
+}
+
+.board-hint {
+  margin: 0;
+  color: rgba(255, 248, 231, 0.75);
+  font-size: clamp(12px, 1.2vw, 16px);
+}
+
+.board-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(16px, 2vw, 32px);
+  margin-top: 1vh;
+}
+
+.board-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  background: transparent;
+  color: #fff8e7;
+  border: 0;
+  font-family: inherit;
+  font-size: clamp(18px, 1.9vw, 26px);
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 120ms;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.5);
+}
+
+.board-btn:hover {
+  transform: translateY(-3px);
+  color: var(--gold);
+}
+
+.board-btn:active {
+  transform: translateY(1px);
+}
+
+.board-btn-icon {
+  width: clamp(96px, 11vw, 160px);
+  height: auto;
+  image-rendering: pixelated;
+  display: block;
+  filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.45));
+}
+
+/* 移除按钮底色：保留 class 名仅作为语义钩子 */
+.camera-btn,
+.upload-btn {
+  background: transparent;
+}
+
+.drop-hint {
+  margin-top: 0.5vh;
+  padding: 8px 14px;
+  border: 2px dashed rgba(255, 248, 231, 0.45);
+  border-radius: 6px;
+  color: rgba(255, 248, 231, 0.65);
+  font-size: clamp(11px, 1vw, 13px);
+}
+
+.idle-pane.dragover .drop-hint {
+  border-color: var(--gold);
+  background: rgba(255, 216, 59, 0.12);
+  color: var(--gold);
+}
+
+/* hidden 属性需高优先级，避免被 display: grid 覆盖 */
+[hidden] {
+  display: none !important;
+}
+
+/* ===== SOLVING / DONE：题目 + 视频精准嵌入背景虚线框 =====
+   背景图 classroom-board.png (1672×941) 上两个黄色虚线框的近似位置：
+   左 "题目"  框  → left 19%, top 24%, width 20.5%, height 41%
+   右 "解答"  框  → left 41%, top 24%, width 42%,   height 41%
+   如果框对不齐，调下面这两组百分比即可。 */
+.solve-pane {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* slot 内部再开 */
+}
+
+.solve-slot {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.solve-slot-problem {
+  /* 精准对齐 classroom-board.png 上的左侧 "题目" 黄虚线框
+     图片 1672×941，框 x:311-610 y:185-620
+     注意 .solve-pane 是 .classroom-scene 的直接子节点，所以直接用图片 % */
+  left: 18.60%;
+  top: 23%;
+  width: 17.88%;
+  height: 46.23%;
+}
+
+.solve-slot-problem img {
+  max-width: 96%;
+  max-height: 96%;
+  object-fit: contain;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 3px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.solve-slot-answer {
+  /* 精准对齐右侧 "解答" 黄虚线框
+     图片 1672×941，框 x:672-1332 y:185-620 */
+  left: 40.19%;
+  top: 23%;
+  width: 39.47%;
+  height: 46.23%;
+  background: transparent;
+  contain: strict;
+}
+
+.solve-iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color-scheme: light;
+  /* 让 iframe 不带 dark-mode 默认底色 */
+  border-radius: 0;
+}
+
+/* 操作按钮：黑板下方居中（坐在小男孩书桌上方区域）*/
+.solve-actions {
+  position: absolute;
+  left: 50%;
+  bottom: 8%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 5;
+  pointer-events: auto;
+}
+
+/* 加载占位：iframe 出来前在解答区中央显示 —— 不画框/不铺底，
+   让背景图自带的黄色虚线框成为唯一的边界 */
+.solve-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  text-align: center;
+  padding: 24px;
+  border: 0;
+  background: transparent;
+  pointer-events: none;
+}
+
+.solve-loading-spinner {
+  width: clamp(64px, 8vw, 110px);
+  height: auto;
+  image-rendering: pixelated;
+  display: block;
+  animation: hourglassFlip 2.4s ease-in-out infinite;
+  filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.45));
+}
+
+@keyframes hourglassFlip {
+
+  0%,
+  45% {
+    transform: rotate(0deg);
+  }
+
+  50%,
+  95% {
+    transform: rotate(180deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.solve-loading-title {
+  margin: 0;
+  color: #fff8e7;
+  font-size: clamp(16px, 1.6vw, 22px);
+  font-weight: 800;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
+}
+
+.solve-loading-hint {
+  margin: 0;
+  color: rgba(255, 248, 231, 0.6);
+  font-size: clamp(12px, 1.1vw, 14px);
+  max-width: 28ch;
+}
+
+/* （旧 .problem-col / .problem-frame / .problem-actions 已删除，
+    新版用 .solve-screen + .problem-thumb + .solve-actions） */
+
+.solve-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.solve-header h3 {
+  flex: 1;
+  margin: 0;
+  color: #fff8e7;
+  font-size: clamp(13px, 1.2vw, 16px);
+  font-weight: 800;
+}
+
+.solve-status {
+  font-size: 16px;
+  animation: spin 1.6s linear infinite;
+}
+
+.math-stage[data-state="done"] .solve-status,
+.math-stage[data-state="error"] .solve-status {
+  animation: none;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.solve-stream {
+  flex: 1 1 auto;
+  background: rgba(0, 0, 0, 0.18);
+  border: 2px solid rgba(255, 248, 231, 0.18);
+  border-radius: 4px;
+  padding: 10px 12px;
+  overflow-y: auto;
+  font-size: clamp(11px, 1vw, 13px);
+  line-height: 1.7;
+  color: #f4efe2;
+  white-space: pre-wrap;
+  word-break: break-word;
+  min-height: 0;
+}
+
+.solve-step {
+  margin-bottom: 6px;
+  padding-left: 16px;
+  position: relative;
+}
+
+.solve-step::before {
+  content: "▸";
+  position: absolute;
+  left: 0;
+  color: var(--gold);
+}
+
+.solve-step strong {
+  color: var(--gold);
+}
+
+.solve-answer {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  background: linear-gradient(180deg, rgba(94, 200, 110, 0.22), rgba(60, 140, 80, 0.12));
+  border: 2px solid rgba(126, 255, 168, 0.45);
+  border-radius: 4px;
+}
+
+.answer-label {
+  color: rgba(126, 255, 168, 0.9);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: 2px;
+}
+
+.answer-value {
+  color: #fff;
+  font-size: clamp(14px, 1.4vw, 18px);
+  font-weight: 800;
+}
+
+.viz-area {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  background: rgba(120, 100, 200, 0.18);
+  border: 2px dashed rgba(168, 120, 255, 0.45);
+  border-radius: 4px;
+}
+
+.viz-label {
+  color: rgba(208, 180, 255, 0.9);
+  font-size: 10px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.viz-content {
+  font-size: 11px;
+  color: rgba(255, 248, 231, 0.65);
+}
+
+.viz-content {
+  max-height: 30vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.viz-content video,
+.viz-content img,
+.viz-content svg {
+  max-width: 100%;
+  max-height: 28vh;
+  display: block;
+  object-fit: contain;
+  border-radius: 3px;
+}
+
+/* ===== 通用按钮 ===== */
+.pixel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  background: rgba(42, 49, 56, 0.85);
+  color: #f4efe2;
+  border: 2px solid rgba(255, 248, 231, 0.3);
+  border-radius: 4px;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.45);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pixel-btn:hover {
+  background: rgba(53, 61, 69, 0.95);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.pixel-btn:active {
+  transform: translateY(2px);
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.45);
+}
+
+.pixel-btn-mini {
+  padding: 4px 8px;
+  font-size: 11px;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45);
+}

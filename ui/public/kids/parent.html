@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>家长模式 · Sanctuary</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="parent.css">
+</head>
+<body class="parent-page">
+  <main class="game-shell" aria-label="家长模式">
+    <header class="top-nav">
+      <div class="brand">Sanctuary</div>
+      <nav class="tabs" aria-label="端口切换">
+        <button class="tab-button"        type="button" data-portal="kid">孩子模式</button>
+        <button class="tab-button active" type="button" data-portal="parent">家长模式</button>
+      </nav>
+      <div class="nav-actions">
+        <button class="icon-button" type="button" aria-label="全屏">⛶</button>
+        <button class="icon-button" type="button" aria-label="返回主页"
+          onclick="location.href='index.html'">✕</button>
+      </div>
+    </header>
+
+    <!-- PIN 验证 -->
+    <div class="pin-overlay" id="pinOverlay">
+      <div class="pin-card">
+        <div class="pin-icon">🔒</div>
+        <h2>请输入家长密码</h2>
+        <p class="pin-hint">默认：<code>1234</code></p>
+        <input type="password" id="pinInput" maxlength="8" placeholder="••••" autocomplete="off">
+        <button class="pixel-btn pin-submit" id="pinSubmit" type="button">解锁</button>
+        <p class="pin-error" id="pinError"></p>
+      </div>
+    </div>
+
+    <!-- 仪表盘：左活动 / 右 AI 聊天 -->
+    <div class="parent-dash" id="parentDash" hidden>
+
+      <!-- 左：成长 + 活动日志 -->
+      <aside class="dash-left">
+        <section class="dash-card cat-overview">
+          <div class="overview-row">
+            <img class="overview-cat" id="overviewCatImg" src="assets/cat/stages/1-egg.png" alt="">
+            <div class="overview-info">
+              <div class="big-line"><strong id="overviewLevel">Lv 1 猫猫蛋</strong></div>
+              <div class="xp-row">
+                <span class="xp-track"><span class="xp-fill" id="overviewXpFill"></span></span>
+                <span id="overviewXpText">0 / 10</span>
+              </div>
+              <div class="overview-meta-grid" id="overviewMeta">
+                <span><span class="ico" data-icon="heart"></span><strong id="statEmotion">0</strong> 次聊天</span>
+                <span><span class="ico" data-icon="graduationCap"></span><strong id="statMath">0</strong> 题</span>
+                <span><span class="ico" data-icon="palette"></span><strong id="statCreation">0</strong> 部作品</span>
+                <span><span class="ico" data-icon="clock"></span><strong id="statLastActive">--</strong></span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="dash-card events-card">
+          <div class="events-header">
+            <h3><span class="ico" data-icon="list"></span>活动日志</h3>
+            <div class="events-actions">
+              <button class="pixel-btn pixel-btn-mini" id="dailyReportBtn" type="button">生成日报</button>
+              <button class="pixel-btn pixel-btn-mini" id="copyEventsBtn" type="button">复制</button>
+            </div>
+          </div>
+          <div class="events-list" id="eventsList">
+            <div class="events-empty">暂无活动 — 让小朋友先去玩玩</div>
+          </div>
+        </section>
+
+        <section class="dash-card actions-card">
+          <button class="pixel-btn" id="changePinBtn" type="button">修改密码</button>
+          <button class="pixel-btn danger-btn" id="resetBtn" type="button">重置进度</button>
+        </section>
+      </aside>
+
+      <!-- 右：AI 父母助手 -->
+      <section class="dash-right">
+        <div class="chat-header">
+          <h3><span class="ico" data-icon="cat"></span>小喵助手</h3>
+          <p class="chat-sub">基于孩子最近的活动给你建议，问什么都行</p>
+        </div>
+        <div class="chat-window" id="chatWindow"></div>
+
+        <!-- 快捷追问 -->
+        <div class="quick-prompts" id="quickPrompts">
+          <button class="chip" data-q="孩子今天的状态怎么样？"><span class="ico" data-icon="trendUp"></span>孩子今天怎么样</button>
+          <button class="chip" data-q="孩子最近聊了什么情绪话题？"><span class="ico" data-icon="heart"></span>情绪话题</button>
+          <button class="chip" data-q="数学题做得怎么样？哪些容易卡住？"><span class="ico" data-icon="graduationCap"></span>数学薄弱点</button>
+          <button class="chip" data-q="孩子画了什么？编了什么故事？"><span class="ico" data-icon="palette"></span>创造力观察</button>
+          <button class="chip" data-q="给一个本周亲子活动的建议"><span class="ico" data-icon="bulb"></span>亲子建议</button>
+        </div>
+
+        <form class="chat-input-row" id="chatForm">
+          <input type="text" id="chatInput" placeholder="问问关于孩子的事..." autocomplete="off">
+          <button type="submit" class="pixel-btn submit-btn">发送</button>
+        </form>
+      </section>
+
+    </div>
+
+  </main>
+  <script src="parent.js" type="module"></script>
+</body>
+</html>

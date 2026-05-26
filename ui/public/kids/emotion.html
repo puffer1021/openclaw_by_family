@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>情绪房间 · Sanctuary</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="emotion.css">
+</head>
+<body class="emotion-page">
+  <main class="game-shell" aria-label="情绪房间">
+    <header class="top-nav">
+      <div class="brand">Sanctuary</div>
+      <nav class="tabs" aria-label="端口切换">
+        <button class="tab-button active" type="button">孩子模式</button>
+        <button class="tab-button" type="button" onclick="location.href='parent.html'">家长模式</button>
+      </nav>
+      <div class="nav-actions">
+        <span id="statusPill" class="emo-status idle">未连接</span>
+        <button class="icon-button" type="button" aria-label="返回主页"
+          onclick="history.length>1?history.back():location.href='index.html'">✕</button>
+      </div>
+    </header>
+
+    <!-- Cat stage: fills the main area -->
+    <div class="cat-stage" id="catStage">
+
+      <!-- Room background -->
+      <img class="room-bg" src="assets/rooms/emotion-room.png" alt="情绪房间" aria-hidden="true">
+
+      <!-- Cat character — animated WebM with alpha channel, left of the table -->
+      <video class="cat-character" id="catCharacter"
+        src="assets/cat/live2d/idle.webm"
+        autoplay muted loop playsinline preload="auto"
+        aria-label="小猫"></video>
+
+      <!-- Camera preview (PIP) — only visible in video mode -->
+      <div class="cam-pip" id="camPip" hidden>
+        <video id="camPreview" autoplay muted playsinline></video>
+        <button class="cam-flip" id="flipCameraBtn" type="button" aria-label="翻转摄像头">⟲</button>
+      </div>
+
+      <!-- Speech bubbles：猫的气泡浮在猫头顶，孩子的气泡浮在男孩头顶 -->
+      <div class="bubble-layer bubble-layer-cat" id="bubbleLayerCat" aria-live="polite"></div>
+      <div class="bubble-layer bubble-layer-user" id="bubbleLayerUser" aria-live="polite"></div>
+
+      <!-- Bottom voice dock -->
+      <div class="voice-dock" id="voiceDock">
+        <div class="emo-side-group">
+          <button class="glass-btn" id="interruptBtn" type="button" disabled>打断</button>
+          <button class="glass-btn mode-btn" id="modeBtn" type="button" data-mode="audio" aria-label="切换模式">
+            <span class="mode-label">语音</span>
+          </button>
+        </div>
+
+        <div class="emo-main-btns">
+          <button class="glass-btn glass-btn-primary" id="startBtn" type="button">
+            <span class="btn-label">开始说话</span>
+          </button>
+          <button class="glass-btn" id="stopBtn" type="button" disabled>
+            <span class="btn-label">结束</span>
+          </button>
+        </div>
+
+        <button class="glass-btn" id="catPatBtn" type="button">拍拍</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Hidden elements for media -->
+  <canvas id="frameCanvas" width="640" height="480" hidden></canvas>
+
+  <script src="emotion.js" type="module"></script>
+</body>
+</html>

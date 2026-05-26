@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐟 海底赛跑 · 课堂抽人</title>
+<link rel="icon" href="data:,">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    overflow: hidden;
+    font-family: 'ZCOOL KuaiLe', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: #081527;
+    user-select: none;
+  }
+
+  #gameCanvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  .title-bar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    text-align: center;
+    padding: 16px 20px 12px;
+    background: linear-gradient(180deg, rgba(0,20,60,0.85) 0%, rgba(0,20,60,0) 100%);
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  .title-bar h1 {
+    font-size: 28px;
+    color: #7fdbff;
+    text-shadow: 0 0 20px rgba(127,219,255,0.5), 0 2px 4px rgba(0,0,0,0.5);
+    letter-spacing: 4px;
+  }
+
+  .title-bar p {
+    font-size: 14px;
+    color: rgba(180,220,255,0.7);
+    margin-top: 4px;
+  }
+
+  .controls {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    background: linear-gradient(0deg, rgba(0,20,60,0.85) 0%, rgba(0,20,60,0) 100%);
+    z-index: 10;
+  }
+
+  .btn {
+    padding: 12px 36px;
+    border: 2px solid rgba(127,219,255,0.5);
+    border-radius: 50px;
+    background: linear-gradient(135deg, rgba(0,80,160,0.6), rgba(0,40,100,0.8));
+    color: #7fdbff;
+    font-size: 18px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    letter-spacing: 2px;
+  }
+
+  .btn:hover {
+    background: linear-gradient(135deg, rgba(0,120,200,0.8), rgba(0,60,140,0.9));
+    border-color: #7fdbff;
+    box-shadow: 0 0 25px rgba(127,219,255,0.3);
+    transform: translateY(-2px);
+  }
+
+  .btn:active {
+    transform: translateY(0);
+  }
+
+  .btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, rgba(0,180,120,0.7), rgba(0,100,80,0.9));
+    border-color: rgba(0,255,180,0.5);
+    color: #0ffa;
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(135deg, rgba(0,220,150,0.8), rgba(0,130,100,0.9));
+    border-color: #0ffa;
+    box-shadow: 0 0 25px rgba(0,255,170,0.3);
+  }
+
+  .result-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,10,30,0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+    backdrop-filter: blur(5px);
+  }
+
+  .result-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .result-card {
+    background: linear-gradient(135deg, rgba(0,40,80,0.95), rgba(0,20,50,0.98));
+    border: 2px solid rgba(127,219,255,0.4);
+    border-radius: 24px;
+    padding: 40px 60px;
+    text-align: center;
+    transform: scale(0.8);
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 0 60px rgba(0,100,200,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+
+  .result-overlay.show .result-card {
+    transform: scale(1);
+  }
+
+  .result-card .emoji {
+    font-size: 64px;
+    margin-bottom: 16px;
+  }
+
+  .result-card .label {
+    font-size: 18px;
+    color: rgba(180,220,255,0.7);
+    margin-bottom: 8px;
+  }
+
+  .result-card .name {
+    font-size: 48px;
+    color: #0ffa;
+    text-shadow: 0 0 30px rgba(0,255,170,0.5);
+    margin-bottom: 24px;
+  }
+
+  .result-card .btn {
+    font-size: 16px;
+    padding: 10px 30px;
+  }
+
+  .progress-bar {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .progress-bar.show { opacity: 1; }
+
+  .progress-bar .fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #0ffa, #7fdbff);
+    border-radius: 2px;
+    transition: width 0.1s linear;
+  }
+</style>
+</head>
+<body>
+
+<div class="title-bar">
+  <h1>🐟 海底赛跑 · 课堂抽人</h1>
+  <p>小鱼们出发啦！谁会第一个到达终点呢？</p>
+</div>
+
+<div class="progress-bar" id="progressBar">
+  <div class="fill" id="progressFill"></div>
+</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<div class="controls">
+  <button class="btn btn-primary" id="startBtn" onclick="startRace()">🌊 开始赛跑</button>
+  <button class="btn" id="resetBtn" onclick="resetRace()" disabled>🔄 重新开始</button>
+</div>
+
+<div class="result-overlay" id="resultOverlay">
+  <div class="result-card">
+    <div class="emoji">🏆</div>
+    <div class="label">恭喜获胜的小鱼是</div>
+    <div class="name" id="resultName">—</div>
+    <button class="btn" onclick="closeResult()">🎉 知道了</button>
+  </div>
+</div>
+
+<script>
+const STUDENTS = [
+  '陈思远', '林晓雨', '张浩然', '王子涵', '刘雨萱',
+  '赵梓轩', '孙一诺', '周子墨', '吴佳怡', '郑思琪',
+  '黄梓涵', '杨雨桐', '朱俊杰', '徐诗涵', '马晨曦',
+  '胡可欣', '郭子豪', '何雨泽', '罗思颖', '高梓萱',
+  '梁浩宇', '宋雅琪', '唐子轩', '许雨晴', '韩思源',
+  '冯子瑜', '邓晨阳', '彭雨辰', '潘可馨', '蒋子航'
+];
+
+const FISH_COLORS = [
+  '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
+  '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
+  '#F1948A', '#82E0AA', '#F8C471', '#AED6F1', '#D7BDE2',
+  '#A3E4D7', '#FAD7A0', '#A9CCE3', '#D5F5E3', '#FADBD8',
+  '#E8DAEF', '#D4EFDF', '#FCF3CF', '#D6EAF8', '#FDEDEC',
+  '#E9F7EF', '#FEF9E7', '#EBF5FB', '#F4ECF7', '#EAF2F8'
+];
+
+const CONFIG = {
+  raceDuration: 9500,
+  trackScreens: 2.7,
+  minTrackLength: 2200,
+  maxLaneHeight: 38,
+  minLaneHeight: 23,
+  fishSize: 22,
+  startDelay: 900,
+  bubbleCount: 70,
+  seaweedCount: 34,
+  lightRayCount: 12,
+};
+
+let canvas, ctx;
+let W = 0;
+let H = 0;
+let DPR = 1;
+let layout = {};
+let fishes = [];
+let bubbles = [];
+let seaweeds = [];
+let lightRays = [];
+let isRacing = false;
+let raceStartTime = 0;
+let winner = null;
+let countdownTimer = null;
+let animFrame = null;
+let lastFrameTime = 0;
+let time = 0;
+
+let camera = {
+  x: 0,
+  y: 0,
+  zoom: 1,
+  targetX: 0,
+  targetY: 0,
+  targetZoom: 1,
+};
+
+function init() {
+  canvas = document.getElementById('gameCanvas');
+  ctx = canvas.getContext('2d');
+  resize();
+  window.addEventListener('resize', resize);
+  loop();
+}
+
+function resize() {
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  W = window.innerWidth;
+  H = window.innerHeight;
+  canvas.width = Math.round(W * DPR);
+  canvas.height = Math.round(H * DPR);
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+  buildLayout();
+  initWorldDecorations();
+
+  if (fishes.length === 0) {
+    initFishes();
+    resetCamera(true);
+  } else {
+    relayoutFishes();
+    clampCameraToWorld();
+  }
+}
+
+function buildLayout() {
+  const topSafe = 108;
+  const bottomSafe = 116;
+  const availableHeight = Math.max(360, H - topSafe - bottomSafe);
+  const laneHeight = clamp(
+    availableHeight / STUDENTS.length,
+    CONFIG.minLaneHeight,
+    CONFIG.maxLaneHeight
+  );
+  const fishSize = clamp(laneHeight * 0.48, 13, CONFIG.fishSize);
+  const totalHeight = laneHeight * STUDENTS.length;
+  const raceTop = Math.max(topSafe, (H - totalHeight) / 2);
+  const trackLength = Math.max(CONFIG.minTrackLength, W * CONFIG.trackScreens);
+  const startX = Math.max(120, W * 0.12);
+  const finishX = startX + trackLength;
+  const worldWidth = finishX + Math.max(300, W * 0.35);
+  const worldHeight = Math.max(H, raceTop + totalHeight + 120);
+
+  layout = {
+    topSafe,
+    bottomSafe,
+    availableHeight,
+    laneHeight,
+    fishSize,
+    totalHeight,
+    raceTop,
+    raceBottom: raceTop + totalHeight,
+    startX,
+    finishX,
+    trackLength,
+    worldWidth,
+    worldHeight,
+    initialCameraX: W / 2,
+    initialCameraY: H / 2,
+  };
+}
+
+function resetCamera(immediate = false) {
+  camera.targetX = layout.initialCameraX;
+  camera.targetY = layout.initialCameraY;
+  camera.targetZoom = 1;
+  if (immediate) {
+    camera.x = camera.targetX;
+    camera.y = camera.targetY;
+    camera.zoom = camera.targetZoom;
+  }
+}
+
+function clampCameraToWorld() {
+  const halfW = W / (2 * camera.zoom);
+  const halfH = H / (2 * camera.zoom);
+  camera.x = clamp(camera.x, halfW, Math.max(halfW, layout.worldWidth - halfW));
+  camera.y = clamp(camera.y, halfH, Math.max(halfH, layout.worldHeight - halfH));
+}
+
+function initWorldDecorations() {
+  initBubbles();
+  initSeaweeds();
+  initLightRays();
+}
+
+function initBubbles() {
+  bubbles = [];
+  for (let i = 0; i < CONFIG.bubbleCount; i++) {
+    bubbles.push(createBubble(Math.random() * layout.worldWidth, Math.random() * layout.worldHeight));
+  }
+}
+
+function createBubble(x, y) {
+  return {
+    x,
+    y,
+    r: 2 + Math.random() * 6,
+    speed: 0.3 + Math.random() * 0.9,
+    wobble: Math.random() * Math.PI * 2,
+    wobbleSpeed: 0.01 + Math.random() * 0.02,
+    opacity: 0.15 + Math.random() * 0.3,
+  };
+}
+
+function updateBubbles(dt) {
+  for (const b of bubbles) {
+    b.y -= b.speed * dt * 0.06;
+    b.wobble += b.wobbleSpeed * dt;
+    b.x += Math.sin(b.wobble) * 0.35;
+    if (b.y < -30) {
+      b.y = layout.worldHeight + 30;
+      b.x = Math.random() * layout.worldWidth;
+    }
+  }
+}
+
+function drawBubbles() {
+  for (const b of bubbles) {
+    if (!isInView(b.x, b.y, 50)) continue;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(180, 220, 255, ${b.opacity})`;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(b.x - b.r * 0.3, b.y - b.r * 0.3, b.r * 0.3, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255, 255, 255, ${b.opacity * 0.8})`;
+    ctx.fill();
+  }
+}
+
+function initSeaweeds() {
+  seaweeds = [];
+  for (let i = 0; i < CONFIG.seaweedCount; i++) {
+    seaweeds.push({
+      x: Math.random() * layout.worldWidth,
+      height: 55 + Math.random() * 130,
+      segments: 5 + Math.floor(Math.random() * 4),
+      color: `hsl(${140 + Math.random() * 40}, ${50 + Math.random() * 30}%, ${25 + Math.random() * 15}%)`,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.004 + Math.random() * 0.009,
+    });
+  }
+}
+
+function drawSeaweeds() {
+  for (const sw of seaweeds) {
+    if (!isInView(sw.x, layout.worldHeight, 180)) continue;
+    ctx.strokeStyle = sw.color;
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    const baseY = layout.worldHeight;
+    ctx.moveTo(sw.x, baseY);
+    for (let i = 1; i <= sw.segments; i++) {
+      const t = i / sw.segments;
+      const sway = Math.sin(time * sw.speed + sw.phase + t * 2) * (15 * t);
+      ctx.lineTo(sw.x + sway, baseY - sw.height * t);
+    }
+    ctx.stroke();
+  }
+}
+
+function initLightRays() {
+  lightRays = [];
+  for (let i = 0; i < CONFIG.lightRayCount; i++) {
+    lightRays.push({
+      x: Math.random() * layout.worldWidth,
+      width: 70 + Math.random() * 140,
+      opacity: 0.018 + Math.random() * 0.04,
+      phase: Math.random() * Math.PI * 2,
+    });
+  }
+}
+
+function drawLightRays() {
+  for (const ray of lightRays) {
+    if (!isInView(ray.x, H / 2, 260)) continue;
+    const sway = Math.sin(time * 0.001 + ray.phase) * 35;
+    const grad = ctx.createLinearGradient(ray.x + sway, 0, ray.x + sway, layout.worldHeight);
+    grad.addColorStop(0, `rgba(120, 200, 255, ${ray.opacity})`);
+    grad.addColorStop(1, `rgba(120, 200, 255, 0)`);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(ray.x + sway - ray.width / 2, 0);
+    ctx.lineTo(ray.x + sway + ray.width / 2, 0);
+    ctx.lineTo(ray.x + sway + ray.width * 1.5, layout.worldHeight);
+    ctx.lineTo(ray.x + sway - ray.width, layout.worldHeight);
+    ctx.closePath();
+    ctx.fill();
+  }
+}
+
+function drawBackground() {
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#0a2a4a');
+  grad.addColorStop(0.3, '#0d3b66');
+  grad.addColorStop(0.72, '#0a2a4a');
+  grad.addColorStop(1, '#061a2e');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  const sandGrad = ctx.createLinearGradient(0, H - 80, 0, H);
+  sandGrad.addColorStop(0, 'rgba(194, 178, 128, 0)');
+  sandGrad.addColorStop(0.35, 'rgba(194, 178, 128, 0.12)');
+  sandGrad.addColorStop(1, 'rgba(160, 140, 100, 0.23)');
+  ctx.fillStyle = sandGrad;
+  ctx.fillRect(0, H - 80, W, 80);
+}
+
+function initFishes() {
+  fishes = STUDENTS.map((name, i) => createFish(name, i));
+}
+
+function createFish(name, i) {
+  return {
+    name,
+    color: FISH_COLORS[i % FISH_COLORS.length],
+    x: layout.startX,
+    y: getLaneY(i),
+    speed: 0,
+    baseSpeed: 0.86 + Math.random() * 0.28,
+    surge: 0,
+    lateKick: -0.2 + Math.random() * 0.55,
+    progress: 0,
+    lane: i,
+    tailPhase: Math.random() * Math.PI * 2,
+    wobble: Math.random() * Math.PI * 2,
+    finished: false,
+    rank: 0,
+  };
+}
+
+function relayoutFishes() {
+  for (const fish of fishes) {
+    fish.y = getLaneY(fish.lane);
+    fish.x = layout.startX + fish.progress * layout.trackLength;
+  }
+}
+
+function getLaneY(i) {
+  return layout.raceTop + i * layout.laneHeight + layout.laneHeight / 2;
+}
+
+function drawFish(fish) {
+  const x = fish.x;
+  const y = fish.y;
+  const size = layout.fishSize;
+  const tailWag = Math.sin(time * 0.008 + fish.tailPhase) * 0.4;
+  const bodyWobble = Math.sin(time * 0.003 + fish.wobble) * Math.max(1.2, size * 0.09);
+
+  if (!isInView(x, y, 100)) return;
+
+  if (winner && fish === winner) {
+    ctx.save();
+    const glowSize = size * 2.2 + Math.sin(time * 0.005) * 5;
+    const glow = ctx.createRadialGradient(x, y + bodyWobble, 0, x, y + bodyWobble, glowSize);
+    glow.addColorStop(0, 'rgba(255, 215, 0, 0.34)');
+    glow.addColorStop(0.5, 'rgba(255, 215, 0, 0.12)');
+    glow.addColorStop(1, 'rgba(255, 215, 0, 0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(x, y + bodyWobble, glowSize, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  ctx.save();
+  ctx.translate(x, y + bodyWobble);
+
+  ctx.beginPath();
+  ctx.ellipse(0, 0, size, size * 0.55, 0, 0, Math.PI * 2);
+  const bodyGrad = ctx.createRadialGradient(-size * 0.2, -size * 0.15, 0, 0, 0, size);
+  bodyGrad.addColorStop(0, lightenColor(fish.color, 40));
+  bodyGrad.addColorStop(0.7, fish.color);
+  bodyGrad.addColorStop(1, darkenColor(fish.color, 30));
+  ctx.fillStyle = bodyGrad;
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.7, 0);
+  ctx.lineTo(-size * 1.3 + Math.sin(tailWag) * 4, -size * 0.45);
+  ctx.lineTo(-size * 1.3 + Math.sin(tailWag) * 4, size * 0.45);
+  ctx.closePath();
+  ctx.fillStyle = darkenColor(fish.color, 15);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.2, -size * 0.5);
+  ctx.quadraticCurveTo(size * 0.1, -size * 0.9, size * 0.4, -size * 0.5);
+  ctx.fillStyle = darkenColor(fish.color, 10);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(size * 0.45, -size * 0.1, size * 0.18, 0, Math.PI * 2);
+  ctx.fillStyle = '#fff';
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(size * 0.5, -size * 0.1, size * 0.1, 0, Math.PI * 2);
+  ctx.fillStyle = '#1a1a2e';
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(size * 0.53, -size * 0.15, size * 0.04, 0, Math.PI * 2);
+  ctx.fillStyle = '#fff';
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(size * 0.75, size * 0.05, size * 0.08, 0, Math.PI);
+  ctx.strokeStyle = darkenColor(fish.color, 30);
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(0, size * 0.45);
+  ctx.quadraticCurveTo(size * 0.15, size * 0.75, -size * 0.2, size * 0.5);
+  ctx.fillStyle = darkenColor(fish.color, 10);
+  ctx.fill();
+
+  ctx.restore();
+
+  ctx.save();
+  const labelSize = winner && fish === winner ? Math.max(13, size * 0.64) : Math.max(10, size * 0.55);
+  ctx.font = `${winner && fish === winner ? 'bold ' : ''}${labelSize}px "ZCOOL KuaiLe", "PingFang SC", sans-serif`;
+  ctx.textAlign = 'center';
+  if (winner && fish === winner) {
+    ctx.fillStyle = '#ffd700';
+    ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
+    ctx.shadowBlur = 8;
+  } else {
+    ctx.fillStyle = 'rgba(255,255,255,0.86)';
+    ctx.shadowColor = 'rgba(0,0,0,0.6)';
+    ctx.shadowBlur = 3;
+  }
+  ctx.fillText(fish.name, x, y + bodyWobble + size + labelSize + 2);
+  ctx.restore();
+}
+
+function drawLanes() {
+  for (let i = 0; i <= STUDENTS.length; i++) {
+    const y = layout.raceTop + i * layout.laneHeight;
+    ctx.strokeStyle = i % 2 === 0 ? 'rgba(100,180,255,0.065)' : 'rgba(100,180,255,0.03)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(layout.startX - 70, y);
+    ctx.lineTo(layout.finishX + 50, y);
+    ctx.stroke();
+  }
+
+  drawStartLine();
+  drawFinishLine();
+  drawDistanceMarkers();
+}
+
+function drawStartLine() {
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  ctx.moveTo(layout.startX, layout.raceTop);
+  ctx.lineTo(layout.startX, layout.raceBottom);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.font = '12px "ZCOOL KuaiLe", sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.34)';
+  ctx.textAlign = 'center';
+  ctx.fillText('起点', layout.startX, layout.raceTop - 8);
+}
+
+function drawFinishLine() {
+  const cellSize = 8;
+  const cols = 4;
+  const rows = Math.ceil(layout.totalHeight / cellSize);
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      ctx.fillStyle = (r + c) % 2 === 0 ? 'rgba(255,255,255,0.24)' : 'rgba(255,255,255,0.06)';
+      ctx.fillRect(layout.finishX + c * cellSize, layout.raceTop + r * cellSize, cellSize, cellSize);
+    }
+  }
+
+  ctx.font = '12px "ZCOOL KuaiLe", sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.34)';
+  ctx.textAlign = 'center';
+  ctx.fillText('终点', layout.finishX + 16, layout.raceTop - 8);
+}
+
+function drawDistanceMarkers() {
+  const markerGap = 500;
+  ctx.font = '10px "PingFang SC", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+  ctx.lineWidth = 1;
+
+  for (let x = layout.startX + markerGap; x < layout.finishX; x += markerGap) {
+    if (!isInView(x, layout.raceTop, 120)) continue;
+    ctx.beginPath();
+    ctx.moveTo(x, layout.raceTop);
+    ctx.lineTo(x, layout.raceBottom);
+    ctx.stroke();
+    ctx.fillText(`${Math.round(x - layout.startX)}m`, x, layout.raceTop - 8);
+  }
+}
+
+function startRace() {
+  if (isRacing) return;
+
+  clearTimeout(countdownTimer);
+  isRacing = true;
+  winner = null;
+  raceStartTime = 0;
+  lastFrameTime = performance.now();
+
+  document.getElementById('startBtn').disabled = true;
+  document.getElementById('resetBtn').disabled = true;
+  document.getElementById('resultOverlay').classList.remove('show');
+  document.getElementById('progressBar').classList.add('show');
+  document.getElementById('progressFill').style.width = '0%';
+
+  for (const fish of fishes) {
+    fish.progress = 0;
+    fish.x = layout.startX;
+    fish.y = getLaneY(fish.lane);
+    fish.finished = false;
+    fish.rank = 0;
+    fish.baseSpeed = 0.86 + Math.random() * 0.28;
+    fish.surge = 0;
+    fish.lateKick = -0.2 + Math.random() * 0.55;
+    fish.speed = fish.baseSpeed;
+  }
+
+  resetCamera(false);
+
+  countdownTimer = setTimeout(() => {
+    raceStartTime = performance.now();
+  }, CONFIG.startDelay);
+}
+
+function updateRace(now, dt) {
+  if (!isRacing || !raceStartTime) return;
+
+  const elapsed = now - raceStartTime;
+  const timeProgress = Math.min(elapsed / CONFIG.raceDuration, 1);
+  const leaderProgress = Math.max(...fishes.map(fish => fish.progress));
+  document.getElementById('progressFill').style.width = `${Math.min(100, leaderProgress * 100)}%`;
+
+  for (const fish of fishes) {
+    if (fish.finished) continue;
+
+    const lagBehind = leaderProgress - fish.progress;
+    const rubberBandBoost = Math.min(0.28, Math.max(0, lagBehind) * 1.8);
+    const lateGameBoost = timeProgress > 0.62 ? fish.lateKick * (timeProgress - 0.62) * 0.85 : 0;
+    const finalPush = timeProgress > 0.78 ? (timeProgress - 0.78) * 1.75 : 0;
+
+    fish.surge = fish.surge * 0.94 + (Math.random() - 0.5) * 0.045;
+    fish.speed = Math.max(0.2, fish.baseSpeed + fish.surge + rubberBandBoost + lateGameBoost + finalPush);
+    fish.progress += (dt / CONFIG.raceDuration) * fish.speed;
+    fish.progress = Math.min(fish.progress, 1);
+    fish.x = layout.startX + fish.progress * layout.trackLength;
+
+    if (fish.progress >= 1 && !fish.finished) {
+      fish.finished = true;
+      fish.rank = fishes.filter(f => f.finished).length;
+      if (fish.rank === 1) {
+        winner = fish;
+        finishRace();
+      }
+    }
+  }
+}
+
+function finishRace() {
+  isRacing = false;
+  clearTimeout(countdownTimer);
+  document.getElementById('progressBar').classList.remove('show');
+  document.getElementById('resetBtn').disabled = false;
+
+  setTimeout(() => {
+    if (!winner) return;
+    document.getElementById('resultName').textContent = winner.name;
+    document.getElementById('resultOverlay').classList.add('show');
+  }, 800);
+}
+
+function resetRace() {
+  isRacing = false;
+  winner = null;
+  raceStartTime = 0;
+  clearTimeout(countdownTimer);
+
+  initFishes();
+  resetCamera(false);
+
+  document.getElementById('startBtn').disabled = false;
+  document.getElementById('resetBtn').disabled = true;
+  document.getElementById('progressBar').classList.remove('show');
+  document.getElementById('progressFill').style.width = '0%';
+  document.getElementById('resultOverlay').classList.remove('show');
+}
+
+function closeResult() {
+  document.getElementById('resultOverlay').classList.remove('show');
+  document.getElementById('startBtn').disabled = false;
+}
+
+function getLeadPack() {
+  const sorted = [...fishes].sort((a, b) => b.progress - a.progress);
+  const leadProgress = sorted[0]?.progress || 0;
+  const closePack = sorted.filter(fish => leadProgress - fish.progress <= 0.1).slice(0, 6);
+  while (closePack.length < Math.min(4, sorted.length)) {
+    closePack.push(sorted[closePack.length]);
+  }
+  return closePack;
+}
+
+function updateCamera() {
+  const leadPack = getLeadPack();
+  const leadProgress = leadPack[0]?.progress || 0;
+  const focus = winner ? 1 : smoothstep(0.015, 0.48, leadProgress);
+
+  if (!isRacing && !winner) {
+    camera.targetX = layout.initialCameraX;
+    camera.targetY = layout.initialCameraY;
+    camera.targetZoom = 1;
+  } else {
+    let weightSum = 0;
+    let avgX = 0;
+    let avgY = 0;
+
+    leadPack.forEach((fish, index) => {
+      const weight = 1 / (index + 1);
+      weightSum += weight;
+      avgX += fish.x * weight;
+      avgY += fish.y * weight;
+    });
+
+    avgX /= weightSum || 1;
+    avgY /= weightSum || 1;
+
+    const zoom = winner ? 1.62 : 1 + focus * 0.54;
+    const lookAhead = W / zoom * (0.16 - focus * 0.04);
+    const desiredX = avgX + lookAhead;
+    const desiredY = avgY;
+
+    camera.targetZoom = zoom;
+    camera.targetX = lerp(layout.initialCameraX, desiredX, focus);
+    camera.targetY = lerp(layout.initialCameraY, desiredY, focus * 0.9);
+  }
+
+  const halfW = W / (2 * camera.targetZoom);
+  const halfH = H / (2 * camera.targetZoom);
+  camera.targetX = clamp(camera.targetX, halfW, Math.max(halfW, layout.worldWidth - halfW));
+  camera.targetY = clamp(camera.targetY, halfH, Math.max(halfH, layout.worldHeight - halfH));
+
+  const smoothing = winner ? 0.07 : isRacing ? 0.058 : 0.04;
+  camera.x += (camera.targetX - camera.x) * smoothing;
+  camera.y += (camera.targetY - camera.y) * smoothing;
+  camera.zoom += (camera.targetZoom - camera.zoom) * smoothing;
+}
+
+function applyCamera() {
+  ctx.translate(W / 2, H / 2);
+  ctx.scale(camera.zoom, camera.zoom);
+  ctx.translate(-camera.x, -camera.y);
+}
+
+function isInView(x, y, padding = 0) {
+  const halfW = W / (2 * camera.zoom) + padding;
+  const halfH = H / (2 * camera.zoom) + padding;
+  return x >= camera.x - halfW &&
+    x <= camera.x + halfW &&
+    y >= camera.y - halfH &&
+    y <= camera.y + halfH;
+}
+
+function lightenColor(hex, amount) {
+  let r = parseInt(hex.slice(1, 3), 16);
+  let g = parseInt(hex.slice(3, 5), 16);
+  let b = parseInt(hex.slice(5, 7), 16);
+  r = Math.min(255, r + amount);
+  g = Math.min(255, g + amount);
+  b = Math.min(255, b + amount);
+  return `rgb(${r},${g},${b})`;
+}
+
+function darkenColor(hex, amount) {
+  let r = parseInt(hex.slice(1, 3), 16);
+  let g = parseInt(hex.slice(3, 5), 16);
+  let b = parseInt(hex.slice(5, 7), 16);
+  r = Math.max(0, r - amount);
+  g = Math.max(0, g - amount);
+  b = Math.max(0, b - amount);
+  return `rgb(${r},${g},${b})`;
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
+function smoothstep(edge0, edge1, value) {
+  const t = clamp((value - edge0) / (edge1 - edge0), 0, 1);
+  return t * t * (3 - 2 * t);
+}
+
+function loop(now = 0) {
+  time = now;
+  const dt = Math.min(48, Math.max(8, now - lastFrameTime || 16));
+  lastFrameTime = now;
+
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+
+  drawBackground();
+  updateBubbles(dt);
+  updateRace(now, dt);
+  updateCamera();
+
+  ctx.save();
+  applyCamera();
+  drawLightRays();
+  drawSeaweeds();
+  drawBubbles();
+  drawLanes();
+  for (const fish of fishes) {
+    drawFish(fish);
+  }
+  ctx.restore();
+
+  animFrame = requestAnimationFrame(loop);
+}
+
+window.addEventListener('load', init);
+</script>
+</body>
+</html>
